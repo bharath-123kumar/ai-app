@@ -33,9 +33,9 @@ export const query = async (text: string, params: any[] = []): Promise<any> => {
         });
       } else {
         const processedParams = params.map(p => (typeof p === 'object' ? JSON.stringify(p) : p));
-        sqliteDb.run(sqliteQuery, processedParams, function (err: any) {
+        sqliteDb.run(sqliteQuery, processedParams, function (this: any, err: any) {
           if (err) reject(err);
-          else resolve({ rows: [{ id: (this as any).lastID }], rowCount: (this as any).changes });
+          else resolve({ rows: [{ id: this.lastID }], rowCount: this.changes });
         });
       }
     });
