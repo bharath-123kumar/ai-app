@@ -1,5 +1,3 @@
-import { Pool } from 'pg';
-import sqlite3 from 'sqlite3';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -7,28 +5,21 @@ dotenv.config();
 
 const useSqlite = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');
 
-let pgPool: Pool | null = null;
-let sqliteDb: sqlite3.Database | null = null;
+let pgPool: any = null;
+let sqliteDb: any = null;
 
-if (useSqlite) {
-  const dbPath = path.join(__dirname, '../../database.sqlite');
-  sqliteDb = new sqlite3.Database(dbPath);
-  console.log('Using SQLite database at', dbPath);
-} else {
-  pgPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
-  console.log('Using PostgreSQL database');
-}
-
-export const query = (text: string, params: any[] = []): Promise<any> => {
-  if (useSqlite && sqliteDb) {
+export const query = async (text: string, params: any[] = []): Promise<any> => {
+  if (useSqlite) {
+    if (!sqliteDb) {
+      const sqlite3 = await import('sqlite3');
+      const dbPath = path.join(__dirname, '../../database.sqlite');
+      sqliteDb = new sqlite3.default.Database(dbPath);
+      console.log('Using SQLite database at', dbPath);
+    }
     return new Promise((resolve, reject) => {
-      // Convert $1, $2 to ?, ? for SQLite
       const sqliteQuery = text.replace(/\$\d+/g, '?');
-      
       if (text.trim().toUpperCase().startsWith('SELECT')) {
-        sqliteDb!.all(sqliteQuery, params, (err, rows: any) => {
+        sqliteDb.all(sqliteQuery, params, (err: any, rows: any) => {
           if (err) reject(err);
           else {
             const parsedRows = rows.map((row: any) => {
@@ -41,18 +32,21 @@ export const query = (text: string, params: any[] = []): Promise<any> => {
           }
         });
       } else {
-        // For INSERT/UPDATE, stringify data if it's an object
         const processedParams = params.map(p => (typeof p === 'object' ? JSON.stringify(p) : p));
-        sqliteDb!.run(sqliteQuery, processedParams, function (err) {
+        sqliteDb.run(sqliteQuery, processedParams, function (err: any) {
           if (err) reject(err);
-          else resolve({ rows: [{ id: this.lastID }], rowCount: this.changes });
+          else resolve({ rows: [{ id: (this as any).lastID }], rowCount: (this as any).changes });
         });
       }
     });
-  } else if (pgPool) {
+  } else {
+    if (!pgPool) {
+      const { Pool } = await import('pg');
+      pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+      console.log('Using PostgreSQL database');
+    }
     return pgPool.query(text, params);
   }
-  throw new Error('No database connection');
 };
 
 export const initDb = async () => {
