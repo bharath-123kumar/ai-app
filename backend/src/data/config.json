@@ -1,0 +1,92 @@
+{
+  "name": "Dynamic Platform",
+  "defaultLanguage": "en",
+  "languages": ["en", "hi", "es"],
+  "tables": [
+    {
+      "name": "users",
+      "fields": [
+        { "name": "email", "label": { "en": "Email", "hi": "ईमेल" }, "type": "email", "required": true },
+        { "name": "password", "label": { "en": "Password", "hi": "पासवर्ड" }, "type": "password", "required": true },
+        { "name": "name", "label": { "en": "Full Name", "hi": "पूरा नाम" }, "type": "text", "required": true }
+      ]
+    },
+    {
+      "name": "tasks",
+      "fields": [
+        { "name": "title", "label": { "en": "Title", "hi": "शीर्षक" }, "type": "text", "required": true },
+        { "name": "description", "label": { "en": "Description", "hi": "विवरण" }, "type": "text" },
+        { "name": "priority", "label": { "en": "Priority", "hi": "प्राथमिकता" }, "type": "select", "options": [
+          { "label": "Low", "value": "low" },
+          { "label": "Medium", "value": "medium" },
+          { "label": "High", "value": "high" }
+        ]}
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "home",
+      "route": "/",
+      "title": { "en": "Dashboard", "hi": "डैशबोर्ड" },
+      "components": [
+        {
+          "id": "hero-section",
+          "type": "hero",
+          "props": {
+            "title": { "en": "Welcome to Dynamic AI Platform", "hi": "डायनामिक एआई प्लेटफॉर्म में आपका स्वागत है" },
+            "subtitle": { "en": "Manage your tasks and users with ease.", "hi": "अपने कार्यों और उपयोगकर्ताओं को आसानी से प्रबंधित करें।" }
+          }
+        },
+        {
+          "id": "task-table",
+          "type": "table",
+          "props": {
+            "title": { "en": "Recent Tasks", "hi": "हाल के कार्य" },
+            "source": "tasks"
+          }
+        }
+      ]
+    },
+    {
+      "id": "login",
+      "route": "/login",
+      "title": { "en": "Login", "hi": "लॉगिन" },
+      "components": [
+        {
+          "id": "login-form",
+          "type": "form",
+          "props": {
+            "fields": ["email", "password"],
+            "submitLabel": { "en": "Login", "hi": "लॉगिन करें" },
+            "action": "/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "id": "add-task",
+      "route": "/tasks/add",
+      "title": { "en": "Add Task", "hi": "कार्य जोड़ें" },
+      "protected": true,
+      "components": [
+        {
+          "id": "task-form",
+          "type": "form",
+          "props": {
+            "fields": ["title", "description", "priority"],
+            "submitLabel": { "en": "Save Task", "hi": "कार्य सहेजें" },
+            "action": "/api/tasks"
+          }
+        },
+        {
+            "id": "csv-import",
+            "type": "csv-import",
+            "props": {
+                "targetTable": "tasks"
+            }
+        }
+      ]
+    }
+  ]
+}
