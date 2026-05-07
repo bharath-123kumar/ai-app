@@ -22,17 +22,27 @@ export const authController = {
 
   async login(req: Request, res: Response) {
     const { email, password } = req.body;
+    console.log(`Login attempt for email: ${email}`);
     try {
       const result = await query('SELECT * FROM users WHERE email = $1', [email]);
       const user = result.rows[0];
 
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      if (!user) {
+        console.log(`Login failed: User not found for email: ${email}`);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        console.log(`Login failed: Password mismatch for email: ${email}`);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
+      console.log(`Login successful for email: ${email}`);
       res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
     } catch (error: any) {
+      console.error(`Login error for email ${email}:`, error);
       res.status(500).json({ error: error.message });
     }
   }

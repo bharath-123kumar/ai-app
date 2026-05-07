@@ -3,7 +3,9 @@ import path from 'path';
 
 dotenv.config();
 
-const useSqlite = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost');
+// Enforce PostgreSQL on Render, otherwise check for local DATABASE_URL
+const isRender = process.env.RENDER === 'true';
+const useSqlite = !isRender && (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost'));
 
 let pgPool: any = null;
 let sqliteDb: any = null;
